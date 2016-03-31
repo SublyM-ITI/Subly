@@ -1,0 +1,29 @@
+
+#power {
+	position: relative;
+}
+
+.status {
+	position: absolute;
+	top: -50px;
+    right: 10px;
+
+}
+.logosize {
+	width:50%;
+}
+
+.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto 
+}
+
+.hcent {
+    position: relative;
+
+    left: 20%;
+
+    width: 60%;
+
+}
