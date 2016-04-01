@@ -16,7 +16,7 @@
   },
   
   "oauth2": {
-    "client_id": "141200218878-q67o0oi51ch2edl4nodkg2sj22ms842d.apps.googleusercontent.com",
+    "client_id": "Please place your Client ID here",
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email"
     ]
