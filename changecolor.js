@@ -181,17 +181,18 @@ var injected = injected || (function(){
           }
         }
 
-        else if(affectword != ""){ //If a word was found
-          //Use of this regular expression to maintain the capital letters of the words
-          //The variable affectword contains all the positive affect words
-          var regex2 = new RegExp( '(' + '(?![^<>]*>)' + affectword + ')', 'gi' ); 
-          if(reverse == 1){ //Checks if the reverse mode is enabled (by default it's not)
-            s = s.replace(regex2, '</subly><subly class="sublychangeaffect" name="$1" style="opacity: 1">'+ "$1" + '</subly><subly name="sublychange" style="opacity: ' + options[0][1] + '">');
+        else{ 
+          if(affectword != ""){ //If a word was found
+            //Use of this regular expression to maintain the capital letters of the words
+            //The variable affectword contains all the positive affect words
+            var regex2 = new RegExp( '(' + '(?![^<>]*>)' + affectword + ')', 'gi' ); 
+            if(reverse == 1){ //Checks if the reverse mode is enabled (by default it's not)
+              s = s.replace(regex2, '</subly><subly class="sublychangeaffect" name="$1" style="opacity: 1">'+ "$1" + '</subly><subly name="sublychange" style="opacity: ' + options[0][1] + '">');
+            }
+            else{
+              s = s.replace(regex2, '<subly class="sublychangeaffect" name="$1" style="' + cssstyle + '">'+ "$1" + '</subly>');
+            }
           }
-          else{
-            s = s.replace(regex2, '<subly class="sublychangeaffect" name="$1" style="' + cssstyle + '">'+ "$1" + '</subly>');
-          }
-
           newNode.innerHTML = s;
           if(/\S/.test(sant)) //Checks if there is anything but whitespaces on the text node
             tables.replaceChild(newNode, tables2[i]);
@@ -307,17 +308,9 @@ var injected = injected || (function(){
    }
   
   
-   
-
-   function waitForStart(e){
-    if(e.which == 83 || e.keyCode == 83){
-      recursiveFindNReplace(tables1[0]);      
-    }
-   }
 
    function sendData(){
     var tsend = Date.now();
-    
     if(visible == 1 && lock == 0){
       timeend += tsend - timestart;
     }
@@ -337,7 +330,6 @@ var injected = injected || (function(){
         word_data: JSON.stringify(primedwords),
         paffect_data: JSON.stringify(primedpaffect)
       });
-
 
       timesread = 0;
       timesreadaff = 0;
@@ -363,7 +355,6 @@ var injected = injected || (function(){
    function timestarted(pvals){
     addvisibilityevents();
     priority = pvals;
-    console.log(priority);
     chrome.storage.local.get(["subliminalt", "flashfreq", "flashdur", "cuetype", "cueval", "wordlist", "affectlist"], function(items){
       var wordlist = items.wordlist;
       var affectlist = items.affectlist;
@@ -394,7 +385,6 @@ var injected = injected || (function(){
           }
         }
       }
-      console.log(word);
       affectword = "";
       for(var i = 0; i < affectlist.length; i++){
         if(affectword == ""){
@@ -404,7 +394,6 @@ var injected = injected || (function(){
           affectword += "|" + affectlist[i];
         }
       }
-      console.log(affectword);
     
 
       primedwords = [];

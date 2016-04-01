@@ -45,10 +45,11 @@ function iniVariables(){
 }
 
 function resetVariables(){
-  chrome.storage.local.set({"subliminalt" : "perm", "flashfreq" : 5000, "flashdur" : 10, "cuetype" : "opacity", "cueval" : 75, "wordlist" : "", "affectlist" : ""}, function(){
+  chrome.storage.local.set({"subliminalt" : "perm", "flashfreq" : 5000, "flashdur" : 10, "cuetype" : "opacity", "cueval" : 75, "wordlist" : [], "affectlist" : []}, function(){
     console.log("Values reset");
   });
 }
+
 
 
 function createUserId(){
@@ -166,6 +167,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
   }
   else if(request.subject === 'create_user'){
     createUserId();
+  }
+  else if(request.subject === 'reset'){
+    resetVariables();
   }
   if(request.greeting === 'hello'){
     sendResponse( { stage:  localStorage["subpriority"] } );

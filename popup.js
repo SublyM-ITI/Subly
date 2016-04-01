@@ -3,7 +3,6 @@ var affectlist = new Array();
 var subject = "";
 
 document.addEventListener("DOMContentLoaded", function() {
-  
 
   chrome.storage.local.get(["subliminalt", "flashfreq", "flashdur", "cuetype", "cueval", "wordlist", "affectlist"], function(items){
     if(localStorage['power'] == 0){
@@ -20,8 +19,6 @@ document.addEventListener("DOMContentLoaded", function() {
     if(localStorage['subject'] != null){
       document.getElementById('usubject').value = localStorage['subject'];
       subject = localStorage['subject'];
-      checkCreator();
-
     }
 
     if(items.subliminalt != null){
@@ -75,6 +72,8 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById('cueval').addEventListener("change", changeWordCueingValue, false);
   document.getElementById('btnaddword').addEventListener("click", eventWord, false);
   document.getElementById('btnaddaffect').addEventListener("click", eventAffect, false);
+  document.getElementById('yessubject').addEventListener("click", createSubject, false);
+  document.getElementById('nosubject').addEventListener("click", previousSubject, false);
 });
 
 
@@ -123,9 +122,30 @@ function changeSubject(){
     }
     else{
       localStorage['subject'] = subject = "";
+      resetAndReload();
       //document.getElementById('usubject').value = "";
     }
   }
+}
+
+function createSubject(){
+  subject = document.getElementById('usubject').value;
+  localStorage['subject'] = subject;
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "http://evora.m-iti.org/Subly/TStudy/createsubject.php?email=" + localStorage['subuserid'] + "&subject=" + subject, true);
+  xhr.send();
+  resetAndReload();   
+}
+function resetAndReload(){
+  chrome.runtime.sendMessage({
+    subject: "reset"
+  }, function(){
+    location.reload();
+  });
+} 
+
+function previousSubject(){
+  document.getElementById('usubject').value = subject;
 }
 
 function changeAuth(){
@@ -143,28 +163,21 @@ function changeAuth(){
   
 }
 
-function checkCreator(){
-  if(localStorage['subject'] != "" && localStorage['authentication'] != "none"){
-
-  }
-  else{
-    localStorage['canmodify'] = false;
-  }
-}
 
 function changeSubliminalType(){
-  chrome.storage.local.set({"subliminalt": event.target.value}, function(items){
+  var subtype = event.target.value;
+  chrome.storage.local.set({"subliminalt": subtype}, function(items){
     console.log("Subliminal type changed");
   });
-  if(event.target.value == "perm"){
+  if(subtype == "perm"){
     document.getElementById('divflashfreq').style.display = "none";
     document.getElementById('divflashdur').style.display = "none";
   }
-  else if(event.target.value == "flash"){
+  else if(subtype == "flash"){
     document.getElementById('divflashfreq').style.display = "inline";
     document.getElementById('divflashdur').style.display = "inline";
   }
-  
+  sendSettingsDB("&subliminalt=" + subtype); 
 }
 
 function changeFlashFrequency(){
@@ -172,6 +185,7 @@ function changeFlashFrequency(){
     chrome.storage.local.set({"flashfreq": event.target.value}, function(items){
       console.log("Flash frequency changed");
     });
+    sendSettingsDB("&flashfreq=" + event.target.value); 
   }
 }
 
@@ -180,6 +194,7 @@ function changeFlashDuration(){
     chrome.storage.local.set({"flashdur": event.target.value}, function(items){
       console.log("Flash duration changed");
     });
+    sendSettingsDB("&flashdur=" + event.target.value);
   }
 }
 
@@ -195,49 +210,56 @@ function changeWordCueingValue(){
     chrome.storage.local.set({"cueval": event.target.value}, function(items){
       console.log("Word cueing value changed");
     });
+    sendSettingsDB("&cueval=" + event.target.value);
   }
 }
 
 function changeWordCueLabel(text, changed){
+  var cuevalue = "";
   document.getElementById('cueval').type = "number";
-  //TODO: REST OF THE THINGS
   if(text == "opacity"){
     document.getElementById("divselval").style.display = "inline";
     document.getElementById('labelcuetype').innerHTML = "Word opacity (%)";
     if(changed != 0){
-      chrome.storage.local.set({"cueval": 75}, function(items){
+      cuevalue = 75;
+      chrome.storage.local.set({"cueval": cuevalue}, function(items){
         console.log("Word cueing value changed");
       });
-      document.getElementById('cueval').value = 75;
+      document.getElementById('cueval').value = cuevalue;
     }
   }
-  if(text == "font-size"){
+  else if(text == "font-size"){
     document.getElementById("divselval").style.display = "inline";
     document.getElementById('labelcuetype').innerHTML = "Word size (%)";
     if(changed != 0){
-      chrome.storage.local.set({"cueval": 110}, function(items){
+      cuevalue = 110;
+      chrome.storage.local.set({"cueval": cuevalue}, function(items){
         console.log("Word cueing value changed");
       });
-      document.getElementById('cueval').value = 110;
+      document.getElementById('cueval').value = cuevalue;
     }
   }
-  if(text == "text-shadow"){
+  else if(text == "text-shadow"){
+    cuevalue = "0px 0px";
     document.getElementById("divselval").style.display = "none";
-    chrome.storage.local.set({"cueval":"0px 0px"}, function(items){
+    chrome.storage.local.set({"cueval": cuevalue}, function(items){
       console.log("Word cueing value changed");
     });
   }
-  if(text=="other"){
+  else if(text=="other"){
     document.getElementById("divselval").style.display = "inline";
     document.getElementById('labelcuetype').innerHTML = "CSS style";
     document.getElementById('cueval').type = "text";
     if(changed != 0){
-      chrome.storage.local.set({"cueval": ""}, function(items){
+      chrome.storage.local.set({"cueval": cuevalue}, function(items){
         console.log("Word cueing value changed");
       });
-      document.getElementById('cueval').value = "";
+      document.getElementById('cueval').value = cuevalue;
     }
 
+  }
+  if(changed != 0){
+    sendSettingsDB("&cuetype=" + text + "&cueval=" + cuevalue);
   }
 }
 
@@ -251,6 +273,7 @@ function eventWord(){
         wordlist.push([word, priority]);
         saveWordList();
         addRowWord(word, priority, i);
+        sendSettingsDB("&addword=" + word + "&priority=" + priority);
         break;
       }
       else if(wordlist[i][0].toUpperCase() === word.toUpperCase()){
@@ -258,6 +281,7 @@ function eventWord(){
           wordlist[i][1] = priority;
           saveWordList();
           updateRowWord(priority, i);
+          sendSettingsDB("&updateword=" + word + "&priority=" + priority);
         }
         break;
       }
@@ -286,6 +310,7 @@ function addRowWord(word, priority, index){
       if(wordlist[i][0] === tempword){
         wordlist.splice(i, 1);
         saveWordList();
+        sendSettingsDB("&deleteword=" + tempword);
       }
     }
     event.target.parentNode.parentNode.remove();
@@ -311,8 +336,6 @@ function saveWordList(){
   chrome.storage.local.set({"wordlist": wordlist}, function(items){
       console.log("Subliminal words changed");
   });
-
-  //TODO: SAVE THE DATABASE AS WELL
 }
 
 
@@ -325,6 +348,7 @@ function eventAffect(){
         affectlist.push(word);
         saveAffectList();
         addRowAffect(word, i);
+        sendSettingsDB("&addaffect=" + word);
         break;
       }
       else if(affectlist[i].toUpperCase() === word.toUpperCase()){
@@ -355,6 +379,7 @@ function addRowAffect(word, index){
       if(affectlist[i] === tempword){
         affectlist.splice(i, 1);
         saveAffectList();
+        sendSettingsDB("&deleteaffect=" + tempword);
       }
     }
     event.target.parentNode.parentNode.remove();
@@ -374,10 +399,16 @@ function saveAffectList(){
   chrome.storage.local.set({"affectlist": affectlist}, function(items){
     console.log("Positive affect words changed");
   });
-
-  //TODO: SAVE THE DATABASE AS WELL
 }
 
+function sendSettingsDB(setting){
+  console.log(setting);
+  if(localStorage['authentication'] != "none" && localStorage['subject'] != ""){
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://evora.m-iti.org/Subly/TStudy/updatesubject.php?email=" + localStorage['subuserid'] + "&subject=" + localStorage['subject'] + setting, true);
+    xhr.send();
+  }
+}
 
 
 
